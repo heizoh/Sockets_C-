@@ -14,28 +14,28 @@ namespace WindowsFormsApp2
             InitializeComponent();
         }
 
-        private void main()
+        public Server SVR;
+
+        private void Main()
         {
-            
         }
 
         private void Button1_Click(object sender, EventArgs e)
         {
 
-            int port = 49999;
-            Encoding ENC = Encoding.ASCII;
 
             button1.Enabled = false;
             button2.Enabled = true;
-
-            Server SVR = new Server(ENC, port, textBox1);
+            int port = 49999;
+            Encoding ENC = Encoding.ASCII;
+            SVR = new Server(ENC, port, textBox1);
             SVR.Connect();
             
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-           
+            SVR.DisConnect();  
         }
     }
 
@@ -49,24 +49,24 @@ namespace WindowsFormsApp2
         //Textboxに対して直接文字列を追加すると速度低下の要因となる為、StringBuilderを用意する。
         private StringBuilder sb = new StringBuilder();
 
-        private IPEndPoint iP;
+        private IPEndPoint IP;
         private TcpListener TCP;
         private TcpClient client;
         private NetworkStream NS;
         private bool Discon = false;
-        private MemoryStream MS;
         private byte[] ResByte = new byte[256];
         private int ResSize = 0;
         private string ResMsg;
         private string AnsMsg;
 
+        
         public Server(Encoding ENC, int Port, TextBox TB)
         {
             this.ENC = ENC;
             this.Port = Port;
             this.TB = TB;
-            iP = new IPEndPoint(IPAddress.Any, Port);
-            TCP = new TcpListener(iP);
+            IP = new IPEndPoint(IPAddress.Any, Port);
+            TCP = new TcpListener(IP);
         }
 
         public async void Connect()
@@ -77,6 +77,7 @@ namespace WindowsFormsApp2
             TB.Text = sb.ToString();
             client = await TCP.AcceptTcpClientAsync();
             NS = client.GetStream();
+            MemoryStream MS = new MemoryStream();
 
             do
             {
@@ -129,7 +130,10 @@ namespace WindowsFormsApp2
         {
 
             //通信終了の処理。
-            NS.Close();
+            if(NS!=null)
+            {
+                NS.Close();
+            }
             client.Close();
             TCP.Stop();
 
