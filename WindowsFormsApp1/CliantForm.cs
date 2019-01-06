@@ -5,16 +5,11 @@ using System.Windows.Forms;
 
 namespace WindowsFormsApp1
 {
-    public partial class CliantForm : Form
+    public partial class ClientForm : Form
     {
-        public CliantForm()
+        public ClientForm()
         {
             InitializeComponent();
-        }
-
-        private static void Main()
-        {
-
         }
 
         private void Button2_Click(object sender, EventArgs e)

@@ -16,9 +16,6 @@ namespace WindowsFormsApp2
 
         public Server SVR;
 
-        private void Main()
-        {
-        }
 
         private void Button1_Click(object sender, EventArgs e)
         {

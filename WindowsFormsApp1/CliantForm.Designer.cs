@@ -1,6 +1,6 @@
 ﻿namespace WindowsFormsApp1
 {
-    partial class CliantForm
+    partial class ClientForm
     {
         /// <summary>
         /// 必要なデザイナー変数です。
