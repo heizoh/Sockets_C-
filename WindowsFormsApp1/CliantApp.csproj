@@ -56,7 +56,6 @@
     <Compile Include="CliantForm.Designer.cs">
       <DependentUpon>CliantForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="CliantForm.resx">
       <DependentUpon>CliantForm.cs</DependentUpon>

@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
+using System.IO;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace WindowsFormsApp2
@@ -18,64 +14,129 @@ namespace WindowsFormsApp2
             InitializeComponent();
         }
 
+        private void main()
+        {
+            
+        }
+
         private void Button1_Click(object sender, EventArgs e)
         {
-            System.Net.IPEndPoint iP = new System.Net.IPEndPoint(System.Net.IPAddress.Any, 39999);
-            TcpListener tcp = new TcpListener(iP);
-            tcp.Start();
-            TcpClient Cliant = tcp.AcceptTcpClient();
-            textBox1.Text = textBox1.Text + "接続されました。";
-            NetworkStream ns = Cliant.GetStream();
-            ns.ReadTimeout = 10000;
-            ns.WriteTimeout = 10000;
 
-            Encoding Enc = Encoding.ASCII;
+            int port = 49999;
+            Encoding ENC = Encoding.ASCII;
 
-            bool Discon = false;
+            button1.Enabled = false;
+            button2.Enabled = true;
 
-            System.IO.MemoryStream ms = new System.IO.MemoryStream();
-            byte[] ResByte = new byte[256];
-            int ResSize = 0;
+            Server SVR = new Server(ENC, port, textBox1);
+            SVR.Connect();
+            
+        }
 
-            do
-            {
-                ResSize = ns.Read(ResByte, 0, ResByte.Length);
-                if (ResSize == 0)
-                {
-                    Discon = true;
-                    textBox1.Text = textBox1.Text + "クライアントが切断しました。\n";
-                    break;
-                }
-                ms.Write(ResByte, 0, ResByte.Length);
-
-            } while (ns.DataAvailable || ResByte[ResSize - 1] != '\n');
-
-            string ResMsg = Enc.GetString(ms.GetBuffer(), 0, (int)ms.Length);
-            ms.Close();
-
-            textBox1.Text = textBox1.Text + ResMsg + '\n';
-
-            if (!Discon)
-            {
-                string SendMsg = ResMsg.Length.ToString();
-                byte[] SendByte = Enc.GetBytes(SendMsg + '\n');
-
-                ns.Write(SendByte, 0, SendByte.Length);
-                textBox1.Text = textBox1.Text + SendMsg + '\n';
-            }
-
-            ns.Close();
-            Cliant.Close();
-            textBox1.Text = textBox1.Text +　"クライアントとの接続を閉じました\n";
-
-            tcp.Stop();
-            textBox1.Text = textBox1.Text + "受信待機終了\n";
-
+        private void button2_Click(object sender, EventArgs e)
+        {
+           
         }
     }
 
     public class Server
     {
+
+        public int Port;
+        public Encoding ENC;
+        public TextBox TB;
+
+        //Textboxに対して直接文字列を追加すると速度低下の要因となる為、StringBuilderを用意する。
+        private StringBuilder sb = new StringBuilder();
+
+        private IPEndPoint iP;
+        private TcpListener TCP;
+        private TcpClient client;
+        private NetworkStream NS;
+        private bool Discon = false;
+        private MemoryStream MS;
+        private byte[] ResByte = new byte[256];
+        private int ResSize = 0;
+        private string ResMsg;
+        private string AnsMsg;
+
+        public Server(Encoding ENC, int Port, TextBox TB)
+        {
+            this.ENC = ENC;
+            this.Port = Port;
+            this.TB = TB;
+            iP = new IPEndPoint(IPAddress.Any, Port);
+            TCP = new TcpListener(iP);
+        }
+
+        public async void Connect()
+        {
+
+            TCP.Start();
+            sb.Append("接続待ちを開始しました。\r\n");
+            TB.Text = sb.ToString();
+            client = await TCP.AcceptTcpClientAsync();
+            NS = client.GetStream();
+
+            do
+            {
+
+                ResSize = NS.Read(ResByte, 0, ResByte.Length);
+                if(ResSize == 0)
+                {
+                    Discon = true;
+                    sb.Append("クライアントが切断しました。\r\n");
+                    TB.Text = sb.ToString();
+                    break;
+                }
+
+                MS.Write(ResByte, 0, ResByte.Length);
+                
+            } while (NS.DataAvailable || ResByte[ResSize-1] !='\n') ;
+
+            ResMsg = ENC.GetString(MS.GetBuffer(), 0, (int)MS.Length);
+            MS.Close();
+
+            sb.Append(ResMsg + "\r\n");
+            TB.Text = sb.ToString();
+            
+            //受信文字列に対するレスポンスを作成、返信する。
+            if(!Discon)
+            {
+
+                switch (ResMsg)
+                {
+                    case "TEST":
+                        AnsMsg = "TEST OK";
+                        break;
+
+                    default:
+                        AnsMsg = "TEST NG";
+                        break;
+                }
+
+                byte[] AnsByte = ENC.GetBytes(AnsMsg.ToCharArray(), 0, AnsMsg.Length);
+                NS.Write(AnsByte, 0, AnsByte.Length);
+
+                sb.Append(AnsMsg + "\r\n");
+                TB.Text = sb.ToString();
+
+            }
+                        
+        }
+
+        public void DisConnect()
+        {
+
+            //通信終了の処理。
+            NS.Close();
+            client.Close();
+            TCP.Stop();
+
+            sb.Append("接続待ちを解除しました。\r\n");
+            TB.Text = sb.ToString();
+
+        }
 
     }
 
