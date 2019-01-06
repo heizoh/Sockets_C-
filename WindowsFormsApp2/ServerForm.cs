@@ -131,12 +131,15 @@ namespace WindowsFormsApp2
             {
                 NS.Close();
             }
-            client.Close();
+            if (client!=null)
+            {
+                client.Close();
+            }
             TCP.Stop();
 
             sb.Append("接続待ちを解除しました。\r\n");
             TB.Text = sb.ToString();
-
+          
         }
 
     }
